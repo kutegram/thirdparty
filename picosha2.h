@@ -93,12 +93,12 @@ void hash256_block(RaIter1 message_digest, RaIter2 first, RaIter2 last) {
     assert(first + 64 == last);
     static_cast<void>(last);  // for avoiding unused-variable warning
     word_t w[64];
-    std::fill(w, w + 64, 0);
+    std::fill(w, w + 64, word_t(0));
     for (std::size_t i = 0; i < 16; ++i) {
         w[i] = (static_cast<word_t>(mask_8bit(*(first + i * 4))) << 24) |
-                (static_cast<word_t>(mask_8bit(*(first + i * 4 + 1))) << 16) |
-                (static_cast<word_t>(mask_8bit(*(first + i * 4 + 2))) << 8) |
-                (static_cast<word_t>(mask_8bit(*(first + i * 4 + 3))));
+               (static_cast<word_t>(mask_8bit(*(first + i * 4 + 1))) << 16) |
+               (static_cast<word_t>(mask_8bit(*(first + i * 4 + 2))) << 8) |
+               (static_cast<word_t>(mask_8bit(*(first + i * 4 + 3))));
     }
     for (std::size_t i = 16; i < 64; ++i) {
         w[i] = mask_32bit(ssig1(w[i - 2]) + w[i - 7] + ssig0(w[i - 15]) +
@@ -180,12 +180,12 @@ std::string bytes_to_hex_string(const InContainer& bytes) {
 }
 
 class hash256_one_by_one {
-public:
+   public:
     hash256_one_by_one() { init(); }
 
     void init() {
         buffer_.clear();
-        std::fill(data_length_digits_, data_length_digits_ + 4, 0);
+        std::fill(data_length_digits_, data_length_digits_ + 4, word_t(0));
         std::copy(detail::initial_message_digest,
                   detail::initial_message_digest + 8, h_);
     }
@@ -204,17 +204,17 @@ public:
 
     void finish() {
         byte_t temp[64];
-        std::fill(temp, temp + 64, 0);
+        std::fill(temp, temp + 64, byte_t(0));
         std::size_t remains = buffer_.size();
         std::copy(buffer_.begin(), buffer_.end(), temp);
         temp[remains] = 0x80;
 
         if (remains > 55) {
-            std::fill(temp + remains + 1, temp + 64, 0);
+            std::fill(temp + remains + 1, temp + 64, byte_t(0));
             detail::hash256_block(h_, temp, temp + 64);
-            std::fill(temp, temp + 64 - 4, 0);
+            std::fill(temp, temp + 64 - 4, byte_t(0));
         } else {
-            std::fill(temp + remains + 1, temp + 64 - 4, 0);
+            std::fill(temp + remains + 1, temp + 64 - 4, byte_t(0));
         }
 
         write_data_bit_length(&(temp[56]));
@@ -226,12 +226,12 @@ public:
         for (const word_t* iter = h_; iter != h_ + 8; ++iter) {
             for (std::size_t i = 0; i < 4 && first != last; ++i) {
                 *(first++) = detail::mask_8bit(
-                            static_cast<byte_t>((*iter >> (24 - 8 * i))));
+                    static_cast<byte_t>((*iter >> (24 - 8 * i))));
             }
         }
     }
 
-private:
+   private:
     void add_to_data_length(word_t n) {
         word_t carry = 0;
         data_length_digits_[0] += n;
@@ -321,8 +321,8 @@ template <typename InIter, typename OutIter>
 void hash256(InIter first, InIter last, OutIter first2, OutIter last2,
              int buffer_size = PICOSHA2_BUFFER_SIZE_FOR_INPUT_ITERATOR) {
     picosha2::impl::hash256_impl(
-                first, last, first2, last2, buffer_size,
-                typename std::iterator_traits<InIter>::iterator_category());
+        first, last, first2, last2, buffer_size,
+        typename std::iterator_traits<InIter>::iterator_category());
 }
 
 template <typename InIter, typename OutContainer>
@@ -369,7 +369,8 @@ template <typename InContainer>
 std::string hash256_hex_string(const InContainer& src) {
     return hash256_hex_string(src.begin(), src.end());
 }
-template<typename OutIter>void hash256(std::ifstream& f, OutIter first, OutIter last){
+template<typename OutIter>
+void hash256(std::ifstream& f, OutIter first, OutIter last){
     hash256(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>(), first,last);
 
 }
